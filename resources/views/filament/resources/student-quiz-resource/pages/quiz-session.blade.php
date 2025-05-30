@@ -1,8 +1,5 @@
 <x-filament-panels::page :heading="false">
     <div class="mb-6">
-        <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
-            {{ $this->getTitle() }}
-        </h1>
         <p class="mt-2 text-sm text-gray-500">
             @if(!$this->isQuizSubmitted)
                 <span wire:key="question-form-{{ $this->currentQuestionId }}">
@@ -23,7 +20,7 @@
                     </span>
                 </span>
             @else
-                <span class="font-medium text-success-600">Quiz telah selesai</span>
+                <span class="font-bold text-2xl text-success-600">Quiz telah selesai</span>
             @endif
         </p>
     </div>
@@ -52,7 +49,7 @@
                                 {{ isset($this->selectedAnswers[$this->currentQuestionId]) && $this->selectedAnswers[$this->currentQuestionId] == $option->id ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50' }}"
                                 wire:key="option-{{ $option->id }}"
                             >
-                                <div class="flex items-start">
+                                <div class="flex items-center  gap-2">
                                     <div class="flex-shrink-0 mt-0.5">
                                         <input
                                             type="radio"
@@ -84,16 +81,6 @@
                         </x-filament::button>
 
                         <div class="flex gap-3 sm:justify-end justify-between">
-                            <x-filament::button
-                                wire:click="saveProgress"
-                                type="button"
-                                color="primary"
-                                icon="heroicon-m-check-badge"
-                                wire:loading.attr="disabled"
-                                class="flex-grow sm:flex-grow-0"
-                            >
-                                Simpan Progres
-                            </x-filament::button>
 
                             <x-filament::button
                                 wire:click="navigateToNextQuestion()"
@@ -129,12 +116,9 @@
                                 </div>
                     </div>
                     <div class="p-5 bg-white rounded-lg shadow">
-                        <div class="text-sm font-medium text-gray-700 mb-3">
-                            Progress quiz Anda:
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="bg-primary-600 h-2.5 rounded-full transition-all" style="width: {{ ($this->getAnsweredCount() / $this->getTotalQuestions()) * 100 }}%"></div>
+                        <div class="flex items-center justify-between gap-2 p-4">
+                            <div class="text-sm font-medium text-gray-700">
+                                Progress quiz Anda:
                             </div>
                             <span class="text-sm font-medium text-gray-700 whitespace-nowrap">
                                 {{ $this->getAnsweredCount() }}/{{ $this->getTotalQuestions() }}
