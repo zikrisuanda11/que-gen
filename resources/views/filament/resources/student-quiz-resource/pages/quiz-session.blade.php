@@ -143,48 +143,140 @@
                 <!-- Quiz results -->
                 <div class="p-6 bg-white rounded-xl shadow">
                     <h2 class="text-xl font-bold mb-4">Hasil Quiz</h2>
-                    <div class="space-y-4">
+                    <div class="space-y-6">
                         @php $correctCount = 0; @endphp
-                        @foreach($this->allQuestions as $question)
-                            <div class="p-4 border rounded-lg {{ $this->isCorrectAnswer($question->id) ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200' }}">
-                                <h3 class="font-semibold text-gray-800">{{ $question->title }}</h3>
-                                <div class="text-sm text-gray-600 mb-2 prose prose-sm max-w-none">{!! $question->content !!}</div>
+                        @foreach($this->allQuestions as $index => $question)
+                            @php
+                                $isCorrect = $this->isCorrectAnswer($question->id);
+                                if($isCorrect) { $correctCount++; }
+                                $selectedOption = isset($this->selectedAnswers[$question->id]) ? App\Models\Option::find($this->selectedAnswers[$question->id]) : null;
+                                $correctOption = $this->getCorrectOptionForQuestion($question->id);
+                                $cardClass = $isCorrect ? 'border-green-300 shadow-md shadow-green-100' : 'border-red-300 shadow-md shadow-red-100';
+                                $headerClass = $isCorrect ? 'bg-green-100' : 'bg-red-100';
+                                $statusBadgeClass = $isCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200';
+                                $statusIcon = $isCorrect ? 'heroicon-s-check-circle' : 'heroicon-s-x-circle';
+                                $statusColor = $isCorrect ? 'text-green-600' : 'text-red-600';
+                            @endphp
 
-                                @if(isset($this->selectedAnswers[$question->id]))
-                                    @php
-                                        $selectedOption = App\Models\Option::find($this->selectedAnswers[$question->id]);
-                                        if($this->isCorrectAnswer($question->id)) { $correctCount++; }
-                                    @endphp
-                                    <div class="mt-2">
-                                        <p class="text-sm font-medium">Jawaban Anda:</p>
-                                        <div class="{{ $this->isCorrectAnswer($question->id) ? 'text-green-600' : 'text-red-600' }} prose prose-sm max-w-none">
-                                            {!! $selectedOption ? $selectedOption->option_text : 'Tidak ada jawaban' !!}
-                                        </div>
-                                    </div>
+                            <div class="border-2 rounded-xl overflow-hidden {{ $cardClass }}">
+                                <!-- Question header with status -->
+                                <div class="p-4 flex justify-between items-center {{ $headerClass }} border-b border-gray-200">
+                                    <h3 class="font-bold text-gray-800 flex items-center">
+                                        <span class="bg-white text-gray-700 rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold mr-3 border">{{ $index + 1 }}</span>
+                                        {{ $question->title }}
+                                    </h3>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium flex items-center {{ $isCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' }}">
+                                        @if($isCorrect)
+                                            <x-heroicon-s-check-circle class="w-4 h-4 mr-1 text-green-600" />
+                                            Benar
+                                        @else
+                                            <x-heroicon-s-x-circle class="w-4 h-4 mr-1 text-red-600" />
+                                            Salah
+                                        @endif
+                                    </span>
+                                </div>
 
-                                    @if(!$this->isCorrectAnswer($question->id))
-                                        <div class="mt-2">
-                                            <p class="text-sm font-medium">Jawaban yang benar:</p>
-                                            @php $correctOption = $this->getCorrectOptionForQuestion($question->id); @endphp
-                                            @if($correctOption)
-                                                <div class="text-green-600 prose prose-sm max-w-none">{!! $correctOption->option_text !!}</div>
-                                            @endif
-                                        </div>
-                                    @endif
-                                @else
-                                    <div class="mt-2">
-                                        <p class="text-sm text-gray-500 italic">Tidak dijawab</p>
+                                <!-- Question content -->
+                                <div class="p-5">
+                                    <div class="prose prose-sm max-w-none mb-6 text-gray-700 mx-10" style="margin-left: 0.7rem;">{!! $question->content !!}</div>
+
+                                    <!-- Answer section -->
+                                    <div class="mt-4 space-y-4">
+                                        <!-- User's answer -->
+                                        @if($selectedOption)
+                                            <div class="rounded-lg p-3 {{ $isCorrect ? 'bg-green-50' : 'bg-red-50' }}">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Jawaban Anda:</p>
+                                                <div class="flex items-start">
+                                                    <div class="mt-0.5 mr-2 flex-shrink-0">
+                                                        @if($isCorrect)
+                                                            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+                                                                <x-heroicon-s-check class="h-3 w-3 text-green-600" />
+                                                            </span>
+                                                        @else
+                                                            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-red-100">
+                                                                <x-heroicon-s-x-mark class="h-3 w-3 text-red-600" />
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="{{ $isCorrect ? 'text-green-700' : 'text-red-700' }} prose prose-sm max-w-none">
+                                                        {!! $selectedOption->option_text !!}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="rounded-lg p-3 bg-gray-50 border border-gray-200">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Jawaban Anda:</p>
+                                                <div class="text-gray-500 italic">Tidak dijawab</div>
+                                            </div>
+                                        @endif
+
+                                        <!-- Correct answer (if user's answer is wrong) -->
+                                        @if(!$isCorrect && $correctOption)
+                                            <div class="rounded-lg p-3 bg-green-50 border border-green-200">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Jawaban yang Benar:</p>
+                                                <div class="flex items-start">
+                                                    <div class="mt-0.5 mr-2 flex-shrink-0">
+                                                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+                                                            <x-heroicon-s-check class="h-3 w-3 text-green-600" />
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-green-700 prose prose-sm max-w-none">
+                                                        {!! $correctOption->option_text !!}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
-                                @endif
+                                </div>
                             </div>
                         @endforeach
 
-                        <div class="mt-6 p-6 bg-gray-50 rounded-lg text-center border">
-                                    <h3 class="text-lg font-bold mb-2">Skor Akhir</h3>
-                                    <p class="text-3xl font-bold {{ ($correctCount / $this->allQuestions->count()) >= 0.6 ? 'text-green-600' : 'text-red-600' }}">
-                                        {{ $correctCount }} / {{ $this->allQuestions->count() }}
-                                        <span class="block mt-1">({{ round(($correctCount / $this->allQuestions->count()) * 100) }}%)</span>
-                            </p>
+                        <div class="mt-8 p-6 bg-white rounded-xl shadow-md border-t-4 {{ ($correctCount / $this->allQuestions->count()) >= 0.6 ? 'border-green-500' : 'border-amber-500' }}">
+                            <h3 class="text-lg font-bold mb-4 text-center">Skor Akhir</h3>
+                            <div class="flex flex-col items-center">
+                                <div class="relative">
+                                    <svg class="w-32 h-32" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- Background circle -->
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e6e6e6" stroke-width="3.8" />
+                                        <!-- Progress circle -->
+                                        <circle
+                                            cx="18" cy="18" r="15.9" fill="none"
+                                            stroke="{{ ($correctCount / $this->allQuestions->count()) >= 0.6 ? '#10b981' : '#f59e0b' }}"
+                                            stroke-width="3.8"
+                                            stroke-dasharray="100"
+                                            stroke-dashoffset="{{ 100 - round(($correctCount / $this->allQuestions->count()) * 100) }}"
+                                            transform="rotate(-90 18 18)"
+                                            style="transition: all 1s ease-in-out"
+                                        />
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <span class="text-3xl font-bold {{ ($correctCount / $this->allQuestions->count()) >= 0.6 ? 'text-green-600' : 'text-amber-600' }}">
+                                                {{ round(($correctCount / $this->allQuestions->count()) * 100) }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex items-center justify-center gap-1">
+                                    <span class="text-xl font-bold text-gray-700">{{ $correctCount }} / {{ $this->allQuestions->count() }}</span>
+                                    <span class="text-sm text-gray-500">jawaban benar</span>
+                                </div>
+
+                                <div class="mt-4 {{ ($correctCount / $this->allQuestions->count()) >= 0.6 ? 'text-green-600' : 'text-amber-600' }} font-medium">
+                                    @if(($correctCount / $this->allQuestions->count()) == 1)
+                                        Sempurna! Anda menjawab semua pertanyaan dengan benar.
+                                    @elseif(($correctCount / $this->allQuestions->count()) >= 0.8)
+                                        Sangat bagus! Anda menguasai materi dengan baik.
+                                    @elseif(($correctCount / $this->allQuestions->count()) >= 0.6)
+                                        Bagus! Anda memahami sebagian besar materi.
+                                    @elseif(($correctCount / $this->allQuestions->count()) >= 0.4)
+                                        Cukup. Anda perlu belajar lebih giat lagi.
+                                    @else
+                                        Perlu perbaikan. Jangan menyerah, tetap semangat belajar!
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
