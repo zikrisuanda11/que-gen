@@ -131,6 +131,7 @@
                             color="success"
                             icon="heroicon-m-check-circle"
                             class="w-full justify-center py-3.5 text-lg font-bold mt-5"
+                            :disabled="$this->getAnsweredCount() !== $this->getTotalQuestions()"
                             wire:loading.attr="disabled"
                         >
                             <span wire:loading.remove>Selesaikan Quiz</span>
