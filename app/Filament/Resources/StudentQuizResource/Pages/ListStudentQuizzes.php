@@ -9,11 +9,14 @@ use Filament\Resources\Pages\ListRecords;
 class ListStudentQuizzes extends ListRecords
 {
     protected static string $resource = StudentQuizResource::class;
-
+    
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        return [];
+    }
+    
+    protected function getHeaderDescription(): ?string
+    {
+        return 'Pilih mata pelajaran untuk mulai mengerjakan soal';
     }
 }

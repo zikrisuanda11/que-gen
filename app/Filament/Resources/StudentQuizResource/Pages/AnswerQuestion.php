@@ -76,41 +76,38 @@ class AnswerQuestion extends Page
 
     public function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make("Soal")->schema([
-                    Forms\Components\Placeholder::make("content")
-                        ->label("Isi Soal")
-                        ->content(
-                            fn() => $this->question
-                                ? $this->question->content
-                                : ""
-                        ),
-                ]),
-                Forms\Components\Section::make("Pilihan Jawaban")->schema([
-                    Forms\Components\Radio::make("selectedOption")
-                        ->label("Pilih Jawaban")
-                        ->options(function () {
-                            if (!$this->question) {
-                                return [];
-                            }
+        return $form->schema([
+            Forms\Components\Section::make("Soal")->schema([
+                Forms\Components\Placeholder::make("content")
+                    ->label("Isi Soal")
+                    ->content(
+                        fn() => $this->question ? $this->question->content : ""
+                    ),
+            ]),
+            Forms\Components\Section::make("Pilihan Jawaban")->schema([
+                Forms\Components\Radio::make("selectedOption")
+                    ->label("Pilih Jawaban")
+                    ->options(function () {
+                        if (!$this->question) {
+                            return [];
+                        }
 
-                            return $this->question->options
-                                ->pluck("option_text", "id")
-                                ->toArray();
-                        })
-                        ->default($this->selectedOption)
-                        ->required()
-                        ->disabled(!!$this->submission),
-                ]),
-            ]);
+                        return $this->question->options
+                            ->pluck("option_text", "id")
+                            ->toArray();
+                    })
+                    ->default($this->selectedOption)
+                    ->required()
+                    ->disabled(!!$this->submission),
+            ]),
+        ]);
     }
 
     public function submit()
     {
         $data = $this->form->getState();
-        $this->selectedOption = $data['selectedOption'] ?? null;
-        
+        $this->selectedOption = $data["selectedOption"] ?? null;
+
         if (empty($this->selectedOption)) {
             Notification::make()
                 ->title("Pilih jawaban terlebih dahulu")

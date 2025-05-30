@@ -3,19 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StudentQuizResource\Pages;
-use App\Filament\Resources\StudentQuizResource\RelationManagers;
-use App\Models\Question;
 use App\Models\Subject;
-use App\Models\Submission;
-use App\Models\SubmissionAnswer;
-use Filament\Forms;
+use App\Filament\Resources\StudentQuizResource\Pages\QuizSession;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+
 
 class StudentQuizResource extends Resource
 {
@@ -29,12 +24,12 @@ class StudentQuizResource extends Resource
     
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->role === 'student';
+        return auth()->check() && auth()->user()?->role === 'student';
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->role === 'student';
+        return auth()->check() && auth()->user()?->role === 'student';
     }
 
     public static function canCreate(): bool
@@ -93,7 +88,7 @@ class StudentQuizResource extends Resource
                     ->label('Mulai Mengerjakan')
                     ->icon('heroicon-o-play')
                     ->color('success')
-                    ->url(fn (Subject $record): string => route('filament.teacher.resources.student-quizzes.questions', $record))
+                    ->url(fn (Subject $record): string => route('filament.teacher.resources.student-quizzes.quiz-session', $record))
                     ->visible(fn (Subject $record): bool => $record->questions()->count() > 0),
             ])
             ->bulkActions([])
@@ -113,6 +108,7 @@ class StudentQuizResource extends Resource
             'index' => Pages\ListStudentQuizzes::route('/'),
             'questions' => Pages\QuestionList::route('/{record}/questions'),
             'answer' => Pages\AnswerQuestion::route('/{record}/questions/{questionId}/answer'),
+            'quiz-session' => QuizSession::route('/{record}/quiz'),
         ];
-    }    
+    }
 }
