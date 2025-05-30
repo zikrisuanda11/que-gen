@@ -4,12 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StudentQuizResource\Pages;
 use App\Models\Subject;
+use App\Models\Submission;
 use App\Filament\Resources\StudentQuizResource\Pages\QuizSession;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 
 class StudentQuizResource extends Resource
@@ -73,6 +75,21 @@ class StudentQuizResource extends Resource
                 Tables\Columns\TextColumn::make('questions_count')
                     ->label('Jumlah Soal')
                     ->counts('questions'),
+                Tables\Columns\IconColumn::make('submission_status')
+                    ->label('Status Pengerjaan')
+                    ->boolean()
+                    ->state(function (Subject $record): bool {
+                        $user = Auth::user();
+                        // Check if the user has submissions for questions in this subject
+                        $questionIds = $record->questions()->pluck('id');
+                        return Submission::whereIn('question_id', $questionIds)
+                            ->where('user_id', $user->id)
+                            ->exists();
+                    })
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
@@ -84,10 +101,34 @@ class StudentQuizResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\Action::make('start_quiz')
-                    ->label('Mulai Mengerjakan')
-                    ->icon('heroicon-o-play')
-                    ->color('success')
+                Tables\Actions\Action::make('quiz_action')
+                    ->label(function (Subject $record): string {
+                        $user = Auth::user();
+                        $questionIds = $record->questions()->pluck('id');
+                        $hasSubmissions = Submission::whereIn('question_id', $questionIds)
+                            ->where('user_id', $user->id)
+                            ->exists();
+
+                        return $hasSubmissions ? 'Lihat Hasil' : 'Mulai Mengerjakan';
+                    })
+                    ->icon(function (Subject $record): string {
+                        $user = Auth::user();
+                        $questionIds = $record->questions()->pluck('id');
+                        $hasSubmissions = Submission::whereIn('question_id', $questionIds)
+                            ->where('user_id', $user->id)
+                            ->exists();
+
+                        return $hasSubmissions ? 'heroicon-o-document-chart-bar' : 'heroicon-o-play';
+                    })
+                    ->color(function (Subject $record): string {
+                        $user = Auth::user();
+                        $questionIds = $record->questions()->pluck('id');
+                        $hasSubmissions = Submission::whereIn('question_id', $questionIds)
+                            ->where('user_id', $user->id)
+                            ->exists();
+
+                        return $hasSubmissions ? 'info' : 'success';
+                    })
                     ->url(fn (Subject $record): string => route('filament.teacher.resources.student-quizzes.quiz-session', $record))
                     ->visible(fn (Subject $record): bool => $record->questions()->count() > 0),
             ])
