@@ -24,6 +24,12 @@ class SubjectResource extends Resource
     
     protected static ?int $navigationSort = 1;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'teacher';
+    }
+    
     public static function canViewAny(): bool
     {
         return true; // Both teacher and student can view subjects
