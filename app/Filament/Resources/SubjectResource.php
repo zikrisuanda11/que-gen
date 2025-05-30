@@ -18,38 +18,33 @@ class SubjectResource extends Resource
 {
     protected static ?string $model = Subject::class;
 
-    protected static ?string $navigationIcon = "heroicon-o-academic-cap";
-
-    protected static ?string $navigationLabel = "Mata Pelajaran";
-
+    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+    
+    protected static ?string $navigationLabel = 'Mata Pelajaran';
+    
     protected static ?int $navigationSort = 1;
-
+    
     public static function canViewAny(): bool
     {
-        $user = Auth::user();
-
-        return in_array($user->role, ["teacher"]);
+        return true; // Both teacher and student can view subjects
     }
 
     public static function canCreate(): bool
     {
         $user = Auth::user();
-
-        return in_array($user->role, ["teacher"]);
+        return $user && $user->role === 'teacher';
     }
 
     public static function canEdit($record): bool
     {
         $user = Auth::user();
-
-        return in_array($user->role, ["teacher"]);
+        return $user && $user->role === 'teacher';
     }
 
     public static function canDelete($record): bool
     {
         $user = Auth::user();
-
-        return in_array($user->role, ["teacher"]);
+        return $user && $user->role === 'teacher';
     }
 
     public static function form(Form $form): Form
