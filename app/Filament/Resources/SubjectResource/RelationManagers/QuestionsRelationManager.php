@@ -8,6 +8,8 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Http;
+use Filament\Notifications\Notification;
 
 class QuestionsRelationManager extends RelationManager
 {
@@ -81,6 +83,82 @@ class QuestionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()->label("Tambah Soal Baru"),
+                Tables\Actions\Action::make("generateQuestion")
+                    ->label("Generate Soal dengan AI")
+                    ->icon("heroicon-o-sparkles")
+                    ->form([
+                        Forms\Components\TextInput::make("category")
+                            ->label("Kategori")
+                            ->required(),
+                        Forms\Components\Select::make("answer_option")
+                            ->label("Jumlah Pilihan Jawaban")
+                            ->options([
+                                2 => "2 Pilihan",
+                                3 => "3 Pilihan",
+                                4 => "4 Pilihan",
+                                5 => "5 Pilihan",
+                            ])
+                            ->default(4)
+                            ->required(),
+                    ])
+                    ->action(function (
+                        array $data,
+                        RelationManager $livewire
+                    ): void {
+                        $subject = $livewire->getOwnerRecord();
+
+                        try {
+                            $response = Http::post("localhost:8000/generate", [
+                                "subject_name" => $subject->name,
+                                "category" => $data["category"],
+                                "answer_option" => $data["answer_option"],
+                            ]);
+
+                            if ($response->successful()) {
+                                $questionData = $response->json();
+
+                                // Buat pertanyaan baru
+                                $question = new Question();
+                                $question->subject_id = $subject->id;
+                                $question->title =
+                                    $questionData["question"]["title"];
+                                $question->content =
+                                    $questionData["question"]["content"];
+                                $question->save();
+
+                                // Tambahkan opsi jawaban
+                                foreach ($questionData["options"] as $option) {
+                                    $question->options()->create([
+                                        "option_text" => $option["option_text"],
+                                        "is_correct" => $option["is_correct"],
+                                    ]);
+                                }
+
+                                Notification::make()
+                                    ->title("Soal berhasil digenerate")
+                                    ->success()
+                                    ->send();
+
+                                // Refresh the table
+                                $livewire->mountedTableActionRecord = null;
+                                $livewire->dispatch('refreshComponent');
+                            } else {
+                                Notification::make()
+                                    ->title("Gagal generate soal")
+                                    ->body(
+                                        "Terjadi kesalahan saat menghubungi layanan AI."
+                                    )
+                                    ->danger()
+                                    ->send();
+                            }
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title("Error")
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
